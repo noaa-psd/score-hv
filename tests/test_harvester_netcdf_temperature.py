@@ -7,10 +7,13 @@ Unit tests for io_utils
 """
 import os
 import pathlib
+import pytest
 import yaml
 
 from rnr_score_hv import harvesters
 from rnr_score_hv.harvester_base import harvest
+from rnr_score_hv.yaml_utils import YamlLoader
+from rnr_score_hv.innov_netcdf import Region, InnovStatsConfig
 
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
@@ -73,7 +76,32 @@ def test_netcdf_harvester_config():
 
     with open(conf_yaml_fn, 'w') as file:
         documents = yaml.dump(VALID_CONFIG_DICT, file)
-        print(f'conf_dict: {VALID_CONFIG_DICT}, documents: {documents}')
+        print(f'conf_dict: {conf_yaml_fn}, documents: {documents}')
 
-    data = harvest(VALID_CONFIG_DICT)
-    print(f'harvested {len(data)} records using config: {VALID_CONFIG_DICT}')
+    data1 = harvest(VALID_CONFIG_DICT)
+    harvest_dict = YamlLoader(conf_yaml_fn).load()[0]
+    data2 = harvest(conf_yaml_fn)
+
+    assert len(data1) == len(data2)
+
+    print(f'harvested {len(data1)} records using config: {VALID_CONFIG_DICT}')
+    print(f'harvested {len(data2)} records using config: {harvest_dict}')
+
+def test_netcdf_harvester_region_config():
+    """
+    Test region class
+    """
+
+    region = Region('test_region', -10.0, 10.0)
+    with pytest.raises(ValueError):
+        region = Region(5, -10, 10)
+    with pytest.raises(ValueError):
+        region = Region({}, -10, 10)
+    with pytest.raises(ValueError):
+        region = Region([], -10, 10)
+    with pytest.raises(ValueError):
+        region = Region('test_region', -10, 10)
+    with pytest.raises(ValueError):
+        region = Region('test_region', -10, [])
+    with pytest.raises(ValueError):
+        region = Region('test_region', -10, {})
