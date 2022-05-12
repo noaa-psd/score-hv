@@ -8,6 +8,7 @@ metrics:
 - temperature
 - spechumid
 - uvwind
+output_format: pandas_dataframe
 regions:
   equatorial:
     lat_max: 5.0

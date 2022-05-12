@@ -9,6 +9,9 @@ from collections import namedtuple
 from rnr_score_hv.innov_netcdf import InnovStatsConfig, InnovStatsHarvester
 
 
+NAMED_TUPLES_LIST = 'tuples_list'
+PANDAS_DATAFRAME = 'pandas_dataframe'
+
 INNOV_TEMPERATURE_NETCDF = 'innov_temperature_netcdf'
 
 

@@ -9,7 +9,9 @@ from collections import namedtuple
 from dataclasses import dataclass, field
 from datetime import datetime
 import netCDF4
+import pandas as pd
 
+import rnr_score_hv.harvesters as hvs
 from rnr_score_hv.config_base import ConfigInterface
 from rnr_score_hv import file_utils
 
@@ -122,12 +124,14 @@ class HarvestConfig:
     stats: list = field(default_factory=list, init=False)
     regions: list = field(default_factory=list, init=False)
     metrics_meta: list = field(default_factory=list, init=False)
+    output_format: str = field(default_factory=str, init=False)
 
     def __post_init__(self):
 
         self.set_stats()
         self.set_regions()
         self.set_metrics_meta()
+        self.set_output_format()
 
     def set_metrics_meta(self):
         """
@@ -198,6 +202,17 @@ class HarvestConfig:
             msg = f'Problem parsing regions: {regions} - err: {err} '
             raise ValueError(msg) from err
 
+    def set_output_format(self):
+        """
+        Configure output format. Use default
+        format if none are specified.
+        """
+        self.output_format = self.config_data.get(
+            'output_format',
+            hvs.NAMED_TUPLES_LIST
+        )
+
+
 
 @dataclass
 class InnovStatsConfig(ConfigInterface):
@@ -234,6 +249,10 @@ class InnovStatsConfig(ConfigInterface):
     def get_regions(self):
         ''' return list of region  '''
         return self.harvest_config.regions
+
+    def get_output_format(self):
+        ''' return list of region  '''
+        return self.harvest_config.output_format
 
 
 HarvestedData = namedtuple(
@@ -331,7 +350,30 @@ class InnovStatsHarvester:
 
             ncfile.close()
 
-        # could convert the list of named tuples to a pandas dataframe
-        # df = pd.DataFrame(harvested_data), columns=harvested_data.fields)
+        if self.config.get_output_format() == hvs.PANDAS_DATAFRAME:
+            harvested_data_pd = self.get_data_pandas_df(harvested_data)
+            return harvested_data_pd
 
-        return harvested_data
+        return harvested_data 
+
+
+    def get_data_pandas_df(self, data):
+        """
+        Convert the list of HarvestedData tuples into a pandas dataframe
+
+        Parameters:
+        -----------
+        data: list of HarvestedData named tuples
+
+        Returns: pd.DataFrame returns a pandas dataframe containing harvested
+                 data
+        """
+        try:
+            df_data = pd.DataFrame(data, columns=HarvestedData._fields)
+        except Exception as err:
+            msg = f'Problem transforming list of tuples into pandas dataframe -' \
+                f' err: ;{err}'
+            raise TypeError(msg) from err
+
+
+        return df_data
