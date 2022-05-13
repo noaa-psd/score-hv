@@ -38,7 +38,7 @@ class Region:
             msg = f'min_lat must be less than max_lat - min_lat: {self.min_lat}, '\
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
-        if self.max_lat < self.max_lat:
+        if self.max_lat < self.min_lat:
             msg = f'min_lat must be greater than min_lat - min_lat: {self.min_lat}, '\
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
