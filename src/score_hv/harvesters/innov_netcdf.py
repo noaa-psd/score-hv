@@ -25,6 +25,9 @@ VALID_STATS = [
     'rmsd'
 ]
 
+MIN_CYCLE_DATETIME = datetime(1988, 1, 1)
+MAX_CYCLE_DATETIME = datetime.utcnow()
+
 
 @dataclass
 class Region:
@@ -88,6 +91,14 @@ class MetricMeta:
                 cycle,
                 self.file_meta.get('cycletime_str')
             )
+
+            if (self.cycletime > MAX_CYCLE_DATETIME or
+                self.cycletime < MIN_CYCLE_DATETIME):
+
+                msg = f'cycle time {self.cycletime} is out of range, must ' \
+                    f'be earlier than {MAX_CYCLE_DATETIME} and later than ' \
+                    f'{MIN_CYCLE_DATETIME}.'
+                raise ValueError(msg) from err
 
             filename_str = self.file_meta.get('filename_str')
 
