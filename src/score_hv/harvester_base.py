@@ -7,8 +7,8 @@ Collection of methods to facilitate file/object retrieval
 """
 import argparse
 
-from rnr_score_hv.yaml_utils import YamlLoader
-from rnr_score_hv import harvesters as hvs
+from score_hv.yaml_utils import YamlLoader
+from score_hv import hv_registry as hvr
 
 def harvest(harvest_config):
     """
@@ -34,13 +34,17 @@ def harvest(harvest_config):
         # Create dictionary from the input file
         harvest_dict = YamlLoader(harvest_config).load()[0]
 
-    # Get the list of applications
+    # Determine which harvester to use: note 'harvester_name' must exist
+    # in the harvester yaml/dict config and should point to one of the
+    # registered harvesters (each harvester should be registered in
+    # src/score_hv/hv_registry.py, see hv_registry.py for example registered
+    # harvesters).
     try:
         harvester_name = harvest_dict.get('harvester_name')
         print(f'harvester_name: {harvester_name}')
-        print(f'harvester_registry: {hvs.harvester_registry}, ' \
-                f'type(harvester_registry): {type(hvs.harvester_registry)}')
-        harvester = hvs.harvester_registry.get(harvester_name)
+        print(f'harvester_registry: {hvr.harvester_registry}, ' \
+                f'type(harvester_registry): {type(hvr.harvester_registry)}')
+        harvester = hvr.harvester_registry.get(harvester_name)
     except Exception as err:
         msg = f'could not find harvester from config: {harvest_dict}'
         raise KeyError(msg) from err

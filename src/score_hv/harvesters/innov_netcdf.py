@@ -11,9 +11,8 @@ from datetime import datetime
 import netCDF4
 import pandas as pd
 
-import rnr_score_hv.harvesters as hvs
-from rnr_score_hv.config_base import ConfigInterface
-from rnr_score_hv import file_utils
+from score_hv.config_base import ConfigInterface
+from score_hv import file_utils
 
 valid_metrics = [
     'temperature',
@@ -27,6 +26,13 @@ VALID_STATS = [
     'rmsd'
 ]
 
+MIN_CYCLE_DATETIME = datetime(1988, 1, 1)
+MAX_CYCLE_DATETIME = datetime.utcnow()
+PLEV_PRESURE_UNIT = 'mb'
+
+MIN_LONG = -180
+MAX_LONG = 180
+
 
 @dataclass
 class Region:
@@ -34,6 +40,7 @@ class Region:
     name: str
     min_lat: float
     max_lat: float
+    grid: str = field(default_factory=str, init=False)
 
     def __post_init__(self):
         if not isinstance(self.name, str):
@@ -48,9 +55,9 @@ class Region:
             msg = f'min_lat must be less than max_lat - ' \
                 f'min_lat: {self.min_lat}, max_lat: {self.max_lat}'
             raise ValueError(msg)
-        if self.max_lat < self.max_lat:
-            msg = f'min_lat must be greater than min_lat - ' \
-                f'min_lat: {self.min_lat}, max_lat: {self.max_lat}'
+        if self.max_lat < self.min_lat:
+            msg = f'min_lat must be greater than min_lat - min_lat: {self.min_lat}, '\
+                f'max_lat: {self.max_lat}'
             raise ValueError(msg)
 
         if abs(self.min_lat) > 90 or abs(self.max_lat) > 90:
@@ -58,6 +65,15 @@ class Region:
                 f' than -90 and let than 90 - min_lat: {self.min_lat}, ' \
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
+
+        grid = '('
+        grid += f'({MIN_LONG},{self.max_lat}),'
+        grid += f'({MAX_LONG},{self.max_lat}),'
+        grid += f'({MAX_LONG},{self.min_lat}),'
+        grid += f'({MIN_LONG},{self.min_lat}),'
+        grid += f'({MIN_LONG},{self.max_lat})'
+        grid += ')'
+        
 
 DEFAULT_REGIONS = [
     Region('equatorial', -5.0, 5.0),
@@ -98,6 +114,14 @@ class MetricMeta:
                 cycle,
                 self.file_meta.get('cycletime_str')
             )
+
+            if (self.cycletime > MAX_CYCLE_DATETIME or
+                self.cycletime < MIN_CYCLE_DATETIME):
+
+                msg = f'cycle time {self.cycletime} is out of range, must ' \
+                    f'be earlier than {MAX_CYCLE_DATETIME} and later than ' \
+                    f'{MIN_CYCLE_DATETIME}.'
+                raise ValueError(msg) from err
 
             filename_str = self.file_meta.get('filename_str')
 
@@ -140,7 +164,6 @@ class HarvestConfig:
         """
         try:
             self.metrics = self.config_data.get('metrics')
-            # todo check a finite list for valid formats
         except Exception as err:
             msg = f'\'metrics\' key missing, must be one of ' \
                 f'({valid_metrics}) - err: {err}'
@@ -199,7 +222,7 @@ class HarvestConfig:
                 self.regions = DEFAULT_REGIONS
 
         except Exception as err:
-            msg = f'Problem parsing regions: {regions} - err: {err} '
+            msg = f'Problem parsing regions: {regions} - err: {err}'
             raise ValueError(msg) from err
 
     def set_output_format(self):
@@ -215,7 +238,7 @@ class HarvestConfig:
 
 
 @dataclass
-class InnovStatsConfig(ConfigInterface):
+class InnovStatsCfg(ConfigInterface):
     """
     Dataclass to hold and provide configuration information
     pertaining how the harvester should read netcdf information
@@ -260,9 +283,9 @@ HarvestedData = namedtuple(
     [
         'cycletime',
         'region_name',
-        'region_min_lat',
-        'region_max_lat',
-        'plev',
+        'region_bounds',
+        'elevation',
+        'elevation_units',
         'metric',
         'stat',
         'value'
@@ -271,14 +294,14 @@ HarvestedData = namedtuple(
 
 
 @dataclass
-class InnovStatsHarvester:
+class InnovStatsHv:
     """
     Harvester dataclass class used to parse innovation stats data stored in
     netcdf files
 
     Parameters:
     -----------
-    config: InnovStatsConfig object containing information used to determine
+    config: InnovStatsCfg object containing information used to determine
             how to parse the dimensions plev and variable info store in the
             specified netcdf file/files
 
@@ -289,7 +312,7 @@ class InnovStatsHarvester:
               file, returns a list of tuples containing specified data
 
     """
-    config: InnovStatsConfig = field(default_factory=InnovStatsConfig)
+    config: InnovStatsCfg = field(default_factory=InnovStatsCfg)
 
     def get_data(self):
         """
@@ -333,9 +356,9 @@ class InnovStatsHarvester:
                             item = HarvestedData(
                                 metric.cycletime,
                                 region.name,
-                                region.min_lat,
-                                region.max_lat,
+                                region.grid,
                                 plevs[idx],
+                                PLEV_PRESURE_UNIT,
                                 metric.name,
                                 stat,
                                 nc_vardata[idx]

@@ -10,10 +10,10 @@ import pathlib
 import pytest
 import yaml
 
-from rnr_score_hv import harvesters
-from rnr_score_hv.harvester_base import harvest
-from rnr_score_hv.yaml_utils import YamlLoader
-from rnr_score_hv.innov_netcdf import Region, InnovStatsConfig
+from score_hv import hv_registry
+from score_hv.harvester_base import harvest
+from score_hv.yaml_utils import YamlLoader
+from score_hv.harvesters.innov_netcdf import Region, InnovStatsCfg
 
 
 PYTEST_CALLING_DIR = pathlib.Path(__file__).parent.resolve()
@@ -27,7 +27,7 @@ file_path = os.path.join(
     DATA_DIR
 )
 VALID_CONFIG_DICT = {
-    'harvester_name': harvesters.INNOV_TEMPERATURE_NETCDF,
+    'harvester_name': hv_registry.INNOV_TEMPERATURE_NETCDF,
     'file_meta': {
         'filepath': file_path,
         'cycletime_str': '%Y%m%d%H',

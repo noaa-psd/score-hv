@@ -6,7 +6,7 @@ Collection of methods to facilitate file/object retrieval
 
 """
 from collections import namedtuple
-from rnr_score_hv.innov_netcdf import InnovStatsConfig, InnovStatsHarvester
+from score_hv.harvesters.innov_netcdf import InnovStatsCfg, InnovStatsHv
 
 
 NAMED_TUPLES_LIST = 'tuples_list'
@@ -27,7 +27,7 @@ Harvester = namedtuple(
 harvester_registry = {
     'innov_temperature_netcdf': Harvester(
         'innovation statistics temperature (netcdf)',
-        InnovStatsConfig,
-        InnovStatsHarvester
+        InnovStatsCfg,
+        InnovStatsHv
     )
 }
