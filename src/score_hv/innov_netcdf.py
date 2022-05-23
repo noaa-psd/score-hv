@@ -25,6 +25,8 @@ VALID_STATS = [
     'rmsd'
 ]
 
+PLEV_PRESURE_UNIT = 'mb'
+
 
 @dataclass
 class Region:
@@ -235,7 +237,8 @@ HarvestedData = namedtuple(
         'region_name',
         'region_min_lat',
         'region_max_lat',
-        'plev',
+        'elevation',
+        'elevation_units',
         'metric',
         'stat',
         'value'
@@ -309,6 +312,7 @@ class InnovStatsHarvester:
                                 region.min_lat,
                                 region.max_lat,
                                 plevs[idx],
+                                PLEV_PRESURE_UNIT,
                                 metric.name,
                                 stat,
                                 nc_vardata[idx]
