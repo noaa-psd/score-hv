@@ -27,6 +27,10 @@ VALID_STATS = [
 
 MIN_CYCLE_DATETIME = datetime(1988, 1, 1)
 MAX_CYCLE_DATETIME = datetime.utcnow()
+PLEV_PRESURE_UNIT = 'mb'
+
+MIN_LONG = -180
+MAX_LONG = 180
 
 
 @dataclass
@@ -35,6 +39,7 @@ class Region:
     name: str
     min_lat: float
     max_lat: float
+    grid: str = field(default_factory=str, init=False)
 
     def __post_init__(self):
         if self.min_lat > self.max_lat:
@@ -51,6 +56,15 @@ class Region:
                 f' than -90 and let than 90 - min_lat: {self.min_lat}, ' \
                 f'max_lat: {self.max_lat}'
             raise ValueError(msg)
+
+        grid = '('
+        grid += f'({MIN_LONG},{self.max_lat}),'
+        grid += f'({MAX_LONG},{self.max_lat}),'
+        grid += f'({MAX_LONG},{self.min_lat}),'
+        grid += f'({MIN_LONG},{self.min_lat}),'
+        grid += f'({MIN_LONG},{self.max_lat})'
+        grid += ')'
+        
 
 DEFAULT_REGIONS = [
     Region('equatorial', -5, 5),
@@ -243,9 +257,9 @@ HarvestedData = namedtuple(
     [
         'cycletime',
         'region_name',
-        'region_min_lat',
-        'region_max_lat',
-        'plev',
+        'region_bounds',
+        'elevation',
+        'elevation_units',
         'metric',
         'stat',
         'value'
@@ -316,9 +330,9 @@ class InnovStatsHv:
                             item = HarvestedData(
                                 metric.cycletime,
                                 region.name,
-                                region.min_lat,
-                                region.max_lat,
+                                region.grid,
                                 plevs[idx],
+                                PLEV_PRESURE_UNIT,
                                 metric.name,
                                 stat,
                                 nc_vardata[idx]
