@@ -60,8 +60,8 @@ VALID_CONFIG_DICT = {
         'south_hemis': {
             'lat_min': -60.0,
             'lat_max': -20.0
-        }
-    }
+        },
+    },'output_format': harvesters.PANDAS_DATAFRAME
 }
 
 def test_netcdf_harvester_config():
@@ -74,7 +74,7 @@ def test_netcdf_harvester_config():
         NETCDF_HARVESTER_CONFIG__VALID
     )
 
-    with open(conf_yaml_fn, 'w') as file:
+    with open(conf_yaml_fn, 'w', encoding='utf8') as file:
         documents = yaml.dump(VALID_CONFIG_DICT, file)
         print(f'conf_dict: {conf_yaml_fn}, documents: {documents}')
 
@@ -84,8 +84,15 @@ def test_netcdf_harvester_config():
 
     assert len(data1) == len(data2)
 
+    print(f'dataframe column names: {data2.columns.values.tolist()}')
+
     print(f'harvested {len(data1)} records using config: {VALID_CONFIG_DICT}')
     print(f'harvested {len(data2)} records using config: {harvest_dict}')
+    print(f'harvested data type: {type(data2)}')
+    print(f'harvested data: {data2}')
+
+    os.remove(conf_yaml_fn)
+
 
 def test_netcdf_harvester_region_config():
     """
