@@ -42,9 +42,17 @@ class Region:
     grid: str = field(default_factory=str, init=False)
 
     def __post_init__(self):
+        if not isinstance(self.name, str):
+            msg = f'name must be a string - name {self.name}'
+            raise ValueError(msg)
+        if (not isinstance(self.min_lat, float) or
+            not isinstance(self.max_lat, float)):
+            msg = f'min and max lat must be floats - min lat: {self.min_lat}' \
+                f', max lat: {self.max_lat}'
+            raise ValueError(msg)
         if self.min_lat > self.max_lat:
-            msg = f'min_lat must be less than max_lat - min_lat: {self.min_lat}, '\
-                f'max_lat: {self.max_lat}'
+            msg = f'min_lat must be less than max_lat - ' \
+                f'min_lat: {self.min_lat}, max_lat: {self.max_lat}'
             raise ValueError(msg)
         if self.max_lat < self.min_lat:
             msg = f'min_lat must be greater than min_lat - min_lat: {self.min_lat}, '\
@@ -67,11 +75,11 @@ class Region:
         
 
 DEFAULT_REGIONS = [
-    Region('equatorial', -5, 5),
-    Region('global', -90, 90),
-    Region('north_hemis', 20, 60),
-    Region('tropics', -20, 20),
-    Region('south_hemis', -60, -20)
+    Region('equatorial', -5.0, 5.0),
+    Region('global', -90.0, 90.0),
+    Region('north_hemis', 20.0, 60.0),
+    Region('tropics', -20.0, 20.0),
+    Region('south_hemis', -60.0, -20.0)
 ]
 
 
@@ -326,7 +334,7 @@ class InnovStatsHv:
                         nc_vardata = ncfile.variables[nc_varname][...]
                         vardata_len = len(nc_vardata)
 
-                        for idx in range(vardata_len):
+                        for idx in range(len(nc_vardata)):
                             item = HarvestedData(
                                 metric.cycletime,
                                 region.name,
