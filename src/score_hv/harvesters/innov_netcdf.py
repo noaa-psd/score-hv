@@ -372,17 +372,17 @@ class InnovStatsHv:
 
                         nc_varname = f'{stat}_{region.name}'
                         nc_vardata = ncfile.variables[nc_varname][...]
-                        vardata_len = len(nc_vardata)
+                        time_valid = metric.cycletime + timedelta(hours=6)
 
                         for idx in range(len(nc_vardata)):
                             name = HRVSTR_NAME + metric.name + '_' + stat
                             item = HarvestedData(
                                 name,
-                                metric.cycletime,
+                                time_valid,
                                 region.name,
                                 region.grid,
                                 elevations[idx],
-                                PLEV_PRESURE_UNIT,
+                                ev_units,
                                 metric.name,
                                 stat,
                                 nc_vardata[idx]

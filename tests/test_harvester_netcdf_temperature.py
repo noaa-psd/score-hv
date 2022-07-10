@@ -28,7 +28,7 @@ file_path_innov_stats = os.path.join(
 )
 
 VALID_CONFIG_DICT = {
-    'harvester_name': hv_registry.INNOV_TEMPERATURE_NETCDF,
+    'harvester_name': hv_registry.INNOV_NETCDF,
     'file_meta': {
         'filepath_format_str': file_path_innov_stats,
         'filename_format_str': 'innov_stats.metric.%Y%m%d%H.nc',
